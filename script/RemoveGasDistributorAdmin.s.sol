@@ -16,6 +16,7 @@ import {console2} from "forge-std/console2.sol";
 interface IGasDistributorAdmin {
     function setAdmin(address admin, bool enabled) external;
     function isAdmin(address admin) external view returns (bool);
+    function owner() external view returns (address);
 }
 
 contract RemoveGasDistributorAdminScript is Script {
@@ -30,6 +31,8 @@ contract RemoveGasDistributorAdminScript is Script {
         console2.log("Signer:", signer);
         console2.log("GasDistributor:", gasDistributor);
         console2.log("Admin to remove:", adminToRemove);
+
+        require(IGasDistributorAdmin(gasDistributor).owner() == signer, "Signer is not owner");
 
         vm.startBroadcast(signerPrivateKey);
         IGasDistributorAdmin(gasDistributor).setAdmin(adminToRemove, false);
