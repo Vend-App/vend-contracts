@@ -67,7 +67,12 @@ contract RewardDistributor is Ownable, Pausable, ReentrancyGuard {
         emit Deposit(msg.sender, token, amount);
     }
 
-    function distributeReward(address to, address token, uint256 amount) external onlyOwnerOrAdmin whenNotPaused nonReentrant {
+    function distributeReward(address to, address token, uint256 amount)
+        external
+        onlyOwnerOrAdmin
+        whenNotPaused
+        nonReentrant
+    {
         if (to == address(0)) revert ZeroAddress();
         if (amount == 0) revert ZeroAmount();
 
