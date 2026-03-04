@@ -33,12 +33,11 @@ contract RemoveGasDistributorAdminScript is Script {
         console2.log("Admin to remove:", adminToRemove);
 
         require(IGasDistributorAdmin(gasDistributor).owner() == signer, "Signer is not owner");
+        bool currentlyAdmin = IGasDistributorAdmin(gasDistributor).isAdmin(adminToRemove);
+        require(currentlyAdmin, "Address is not currently an admin");
 
         vm.startBroadcast(signerPrivateKey);
         IGasDistributorAdmin(gasDistributor).setAdmin(adminToRemove, false);
         vm.stopBroadcast();
-
-        bool enabled = IGasDistributorAdmin(gasDistributor).isAdmin(adminToRemove);
-        console2.log("Admin enabled:", enabled);
     }
 }

@@ -33,12 +33,11 @@ contract RemoveRewardDistributorAdminScript is Script {
         console2.log("Admin to remove:", adminToRemove);
 
         require(IRewardDistributorAdmin(rewardDistributor).owner() == signer, "Signer is not owner");
+        bool currentlyAdmin = IRewardDistributorAdmin(rewardDistributor).isAdmin(adminToRemove);
+        require(currentlyAdmin, "Address is not currently an admin");
 
         vm.startBroadcast(signerPrivateKey);
         IRewardDistributorAdmin(rewardDistributor).setAdmin(adminToRemove, false);
         vm.stopBroadcast();
-
-        bool enabled = IRewardDistributorAdmin(rewardDistributor).isAdmin(adminToRemove);
-        console2.log("Admin enabled:", enabled);
     }
 }
