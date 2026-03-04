@@ -16,6 +16,7 @@ import {console2} from "forge-std/console2.sol";
 interface IRewardDistributorAdmin {
     function setAdmin(address admin, bool enabled) external;
     function isAdmin(address admin) external view returns (bool);
+    function owner() external view returns (address);
 }
 
 contract AddRewardDistributorAdminScript is Script {
@@ -30,6 +31,8 @@ contract AddRewardDistributorAdminScript is Script {
         console2.log("Signer:", signer);
         console2.log("RewardDistributor:", rewardDistributor);
         console2.log("Admin to add:", adminToAdd);
+
+        require(IRewardDistributorAdmin(rewardDistributor).owner() == signer, "Signer is not owner");
 
         vm.startBroadcast(signerPrivateKey);
         IRewardDistributorAdmin(rewardDistributor).setAdmin(adminToAdd, true);
