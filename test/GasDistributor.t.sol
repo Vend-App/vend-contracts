@@ -49,17 +49,15 @@ contract GasDistributorTest is Test {
         emit Deposit(user, GAS_AMOUNT);
 
         vm.prank(user);
-        distributor.deposit{value: GAS_AMOUNT}(GAS_AMOUNT);
+        distributor.deposit{value: GAS_AMOUNT}();
 
         assertEq(address(distributor).balance, GAS_AMOUNT);
     }
 
-    function testDepositNativeRevertsOnWrongValue() external {
-        vm.deal(user, GAS_AMOUNT);
-
-        vm.expectRevert(abi.encodeWithSelector(GasDistributor.InvalidNativeDeposit.selector));
+    function testDepositNativeRevertsOnZeroValue() external {
+        vm.expectRevert(abi.encodeWithSelector(GasDistributor.ZeroAmount.selector));
         vm.prank(user);
-        distributor.deposit{value: GAS_AMOUNT - 1}(GAS_AMOUNT);
+        distributor.deposit();
     }
 
     function testAdminCanDistributeGas() external {
@@ -109,7 +107,7 @@ contract GasDistributorTest is Test {
         vm.deal(user, GAS_AMOUNT);
         vm.expectRevert(Pausable.EnforcedPause.selector);
         vm.prank(user);
-        distributor.deposit{value: GAS_AMOUNT}(GAS_AMOUNT);
+        distributor.deposit{value: GAS_AMOUNT}();
 
         vm.expectRevert(Pausable.EnforcedPause.selector);
         vm.prank(admin);
@@ -133,6 +131,14 @@ contract GasDistributorTest is Test {
         assertEq(admin.balance, startBalance + GAS_AMOUNT);
     }
 
+    function testWithdrawRevertsOnInsufficientBalance() external {
+        _setAdmin();
+
+        vm.expectRevert(abi.encodeWithSelector(GasDistributor.InsufficientBalance.selector));
+        vm.prank(admin);
+        distributor.withdraw(GAS_AMOUNT, recipient);
+    }
+
     function testReceiveReverts() external {
         vm.deal(user, GAS_AMOUNT);
 
@@ -150,6 +156,6 @@ contract GasDistributorTest is Test {
     function _depositNative(address from, uint256 amount) internal {
         vm.deal(from, amount);
         vm.prank(from);
-        distributor.deposit{value: amount}(amount);
+        distributor.deposit{value: amount}();
     }
 }
