@@ -75,7 +75,7 @@ contract RewardDistributorTest is Test {
         emit Deposit(user, address(0), NATIVE_REWARD_AMOUNT);
 
         vm.prank(user);
-        distributor.deposit{value: NATIVE_REWARD_AMOUNT}(address(0), NATIVE_REWARD_AMOUNT);
+        distributor.deposit{value: NATIVE_REWARD_AMOUNT}(address(0), 0);
 
         assertEq(address(distributor).balance, NATIVE_REWARD_AMOUNT);
     }
@@ -88,7 +88,7 @@ contract RewardDistributorTest is Test {
         emit Deposit(user, address(0), amount);
 
         vm.prank(user);
-        distributor.deposit{value: amount}(address(0), amount);
+        distributor.deposit{value: amount}(address(0), 0);
 
         assertEq(address(distributor).balance, amount);
     }
@@ -108,21 +108,27 @@ contract RewardDistributorTest is Test {
         assertEq(token.balanceOf(address(distributor)), amount);
     }
 
-    function testDepositNativeRevertsOnWrongValue() external {
+    function testDepositNativeRevertsOnNonZeroAmountParam() external {
         vm.deal(user, NATIVE_REWARD_AMOUNT);
 
         vm.expectRevert(abi.encodeWithSelector(RewardDistributor.InvalidNativeDeposit.selector));
         vm.prank(user);
-        distributor.deposit{value: NATIVE_REWARD_AMOUNT - 1}(address(0), NATIVE_REWARD_AMOUNT);
+        distributor.deposit{value: NATIVE_REWARD_AMOUNT}(address(0), NATIVE_REWARD_AMOUNT);
     }
 
-    function testFuzz_DepositNativeRevertsOnWrongValue(uint256 amount) external {
+    function testFuzz_DepositNativeRevertsOnNonZeroAmountParam(uint256 amount) external {
         vm.assume(amount > 0 && amount <= 100 ether);
         vm.deal(user, amount);
 
         vm.expectRevert(abi.encodeWithSelector(RewardDistributor.InvalidNativeDeposit.selector));
         vm.prank(user);
-        distributor.deposit{value: amount - 1}(address(0), amount);
+        distributor.deposit{value: amount}(address(0), amount);
+    }
+
+    function testDepositNativeRevertsOnZeroValue() external {
+        vm.expectRevert(abi.encodeWithSelector(RewardDistributor.ZeroAmount.selector));
+        vm.prank(user);
+        distributor.deposit(address(0), 0);
     }
 
     function testDepositErc20RevertsIfMsgValueProvided() external {
@@ -254,7 +260,7 @@ contract RewardDistributorTest is Test {
         vm.deal(user, NATIVE_REWARD_AMOUNT);
         vm.expectRevert(Pausable.EnforcedPause.selector);
         vm.prank(user);
-        distributor.deposit{value: NATIVE_REWARD_AMOUNT}(address(0), NATIVE_REWARD_AMOUNT);
+        distributor.deposit{value: NATIVE_REWARD_AMOUNT}(address(0), 0);
 
         vm.expectRevert(Pausable.EnforcedPause.selector);
         vm.prank(admin);
@@ -302,6 +308,6 @@ contract RewardDistributorTest is Test {
     function _depositNative(address from, uint256 amount) internal {
         vm.deal(from, amount);
         vm.prank(from);
-        distributor.deposit{value: amount}(address(0), amount);
+        distributor.deposit{value: amount}(address(0), 0);
     }
 }

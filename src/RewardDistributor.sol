@@ -55,15 +55,16 @@ contract RewardDistributor is Ownable, Pausable, ReentrancyGuard {
     }
 
     function deposit(address token, uint256 amount) external payable whenNotPaused nonReentrant {
-        if (amount == 0) revert ZeroAmount();
-
         if (token == NATIVE_TOKEN) {
-            if (msg.value != amount) revert InvalidNativeDeposit();
-        } else {
-            if (msg.value != 0) revert UnexpectedNativeValue();
-            IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+            if (msg.value == 0) revert ZeroAmount();
+            if (amount != 0) revert InvalidNativeDeposit();
+            emit Deposit(msg.sender, token, msg.value);
+            return;
         }
 
+        if (amount == 0) revert ZeroAmount();
+        if (msg.value != 0) revert UnexpectedNativeValue();
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         emit Deposit(msg.sender, token, amount);
     }
 
