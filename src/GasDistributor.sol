@@ -62,6 +62,7 @@ contract GasDistributor is Ownable, Pausable, ReentrancyGuard {
     /// @notice Withdraws funds even while paused to support emergency admin recovery.
     function withdraw(uint256 amount, address to) external onlyOwnerOrAdmin nonReentrant {
         if (amount == 0) revert ZeroAmount();
+        if (address(this).balance < amount) revert InsufficientBalance();
         address recipient = to == address(0) ? msg.sender : to;
 
         _transferNative(recipient, amount);
