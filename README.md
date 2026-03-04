@@ -1,9 +1,10 @@
 ## Vend Contracts
 
-This repository contains contracts and scripts for reward distribution from the Vend mobile app.
+This repository contains contracts and scripts for reward and gas distribution from the Vend mobile app.
 
 Current implementation:
 - `src/RewardDistributor.sol`
+- `src/GasDistributor.sol`
 
 ## RewardDistributor
 
@@ -29,6 +30,27 @@ Current implementation:
 - OFT handling does not require LayerZero imports for this contract because local token handling is ERC20-compatible.
 - `withdraw` intentionally bypasses pause checks so owner/admin can recover funds during incident response.
 
+## GasDistributor
+
+`GasDistributor` is a native-token-only vault-style contract for:
+- Holding native network token only.
+- Emitting gas-subsidy events for indexing and analytics.
+
+### Features
+
+- Ownable (`owner`) plus configurable admins.
+- Pausable (`deposit` and `distributeGas` are blocked while paused).
+- Deposit flow with explicit `Deposit(caller, amount)` event.
+- Gas distribution flow with `GasDistributed(to, amount)` event.
+- Withdraw flow with `Withdraw(caller, amount, to)` event.
+
+### Important behavior notes
+
+- Distributions are intended to be initiated by the Vend app's backend server wallet as admin.
+- Native deposits must use `deposit(amount)` with matching `msg.value`.
+- Direct native sends are rejected by `receive()` so deposits are always event-tracked.
+- `withdraw` intentionally bypasses pause checks so owner/admin can recover funds during incident response.
+
 ## Network Configuration (Glue)
 
 Configured in `foundry.toml`:
@@ -51,6 +73,7 @@ Required vars:
 - `ETH_RPC_HEADERS`
 - `PRIVATE_KEY`
 - `REWARD_DISTRIBUTOR_ADDRESS` (after deploy)
+- `GAS_DISTRIBUTOR_ADDRESS` (after deploy)
 - `ADMIN_ADDRESS` (for add/remove admin scripts)
 
 ## Scripts
@@ -87,6 +110,36 @@ forge script script/AddRewardDistributorAdmin.s.sol:AddRewardDistributorAdminScr
 ```bash
 source .env
 forge script script/RemoveRewardDistributorAdmin.s.sol:RemoveRewardDistributorAdminScript --rpc-url glue --broadcast
+```
+
+### Deploy GasDistributor
+
+Dry run:
+
+```bash
+source .env
+forge script script/DeployGasDistributor.s.sol:DeployGasDistributorScript --rpc-url glue
+```
+
+Broadcast + verify (Blockscout):
+
+```bash
+source .env
+forge script script/DeployGasDistributor.s.sol:DeployGasDistributorScript --rpc-url glue --broadcast --verify --verifier blockscout --verifier-url https://explorer.glue.net/api
+```
+
+### Add GasDistributor admin
+
+```bash
+source .env
+forge script script/AddGasDistributorAdmin.s.sol:AddGasDistributorAdminScript --rpc-url glue --broadcast
+```
+
+### Remove GasDistributor admin
+
+```bash
+source .env
+forge script script/RemoveGasDistributorAdmin.s.sol:RemoveGasDistributorAdminScript --rpc-url glue --broadcast
 ```
 
 ## Development Commands
