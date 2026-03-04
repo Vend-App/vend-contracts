@@ -18,6 +18,7 @@ contract RewardDistributor is Ownable, Pausable, ReentrancyGuard {
     error InvalidNativeDeposit();
     error UnexpectedNativeValue();
     error NativeTransferFailed();
+    error InsufficientBalance();
     error DirectNativeDepositDisabled();
 
     event AdminUpdated(address indexed admin, bool enabled);
@@ -89,6 +90,7 @@ contract RewardDistributor is Ownable, Pausable, ReentrancyGuard {
 
     function _transferAsset(address token, address to, uint256 amount) internal {
         if (token == NATIVE_TOKEN) {
+            if (address(this).balance < amount) revert InsufficientBalance();
             (bool success,) = payable(to).call{value: amount}("");
             if (!success) revert NativeTransferFailed();
             return;
