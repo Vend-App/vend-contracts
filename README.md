@@ -1,6 +1,6 @@
 ## Vend Contracts
 
-This repository contains contracts and scripts for reward and gas distribution from the Vend mobile app.
+This repository contains contracts and scripts for Vend's reward and gas distribution.
 
 Current implementation:
 - `src/RewardDistributor.sol`
@@ -8,14 +8,11 @@ Current implementation:
 
 ## RewardDistributor
 
-`RewardDistributor` is a simple vault-style contract for:
-- Holding ERC20 tokens (including LayerZero OFTs as standard ERC20s).
-- Holding native network token (`token == address(0)` sentinel).
-- Emitting reward-focused events for indexing and analytics.
+`RewardDistributor` is a simple vault-style contract for holding ERC20 tokens (including LayerZero OFTs) and native gas tokens. Reward-focused events are emitted for indexing.
 
 ### Features
 
-- Ownable (`owner`) plus configurable admins.
+- Ownable plus configurable admins.
 - Pausable (`deposit` and `distributeReward` are blocked while paused).
 - Deposit flow with explicit `Deposit(caller, token, amount)` event.
 - Reward distribution flow with `RewardDistributed(to, token, amount)` event.
@@ -23,18 +20,15 @@ Current implementation:
 
 ### Important behavior notes
 
-- Distributions are intended to be initiated by the Vend app's backend server wallet as admin.
-- Native deposits must use `deposit(address(0), amount)` with matching `msg.value`.
+- For proper function, ensure Vend's backend server wallet is an admin.
+- Native deposits must use `deposit(address(0), 0)` with `msg.value > 0`.
 - Direct native sends are rejected by `receive()` so deposits are always event-tracked.
 - ERC20 transfers sent directly to the contract (without calling `deposit`) cannot be prevented; funds are still usable, but no `Deposit` event is emitted.
-- OFT handling does not require LayerZero imports for this contract because local token handling is ERC20-compatible.
 - `withdraw` intentionally bypasses pause checks so owner/admin can recover funds during incident response.
 
 ## GasDistributor
 
-`GasDistributor` is a native-token-only vault-style contract for:
-- Holding native network token only.
-- Emitting gas-subsidy events for indexing and analytics.
+`GasDistributor` is a native-token-only vault-style contract for holding native gas tokens and emitting distribution events for indexing. Gas subsidies for user onboarding are distributed through this contract by Vend's backend server wallet.
 
 ### Features
 
@@ -46,7 +40,7 @@ Current implementation:
 
 ### Important behavior notes
 
-- Distributions are intended to be initiated by the Vend app's backend server wallet as admin.
+- For proper function, ensure Vend's backend server wallet is an admin.
 - Native deposits must use `deposit()` with `msg.value > 0`.
 - Direct native sends are rejected by `receive()` so deposits are always event-tracked.
 - `withdraw` intentionally bypasses pause checks so owner/admin can recover funds during incident response.
