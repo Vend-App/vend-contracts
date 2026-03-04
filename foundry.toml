@@ -1,0 +1,24 @@
+[profile.default]
+auto_detect_solc = false
+solc = "0.8.28"
+src = "src"
+out = "out"
+libs = ["lib"]
+optimizer = true
+optimizer_runs = 99999999
+bytecode_hash = "none"
+cbor_metadata = false
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/",
+    "openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"
+]
+
+[rpc_endpoints]
+glue = "https://rpc.vend.trade"
+
+[etherscan]
+glue = { key = "no-key-required", url = "https://explorer.glue.net/api" }
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
