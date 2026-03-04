@@ -32,6 +32,8 @@ contract DeployRewardDistributorScript is Script {
         deployed = new RewardDistributor(deployer);
         vm.stopBroadcast();
 
+        require(deployed.owner() == deployer, "Owner mismatch");
+
         console2.log("RewardDistributor deployed at:", address(deployed));
         console2.log("Owner set to:", deployed.owner());
     }
