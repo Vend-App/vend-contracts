@@ -16,9 +16,9 @@ Current implementation:
 
 - Ownable (`owner`) plus configurable admins.
 - Pausable (`deposit` and `distributeReward` are blocked while paused).
-- Deposit flow with explicit `Deposit(token, amount)` event.
+- Deposit flow with explicit `Deposit(caller, token, amount)` event.
 - Reward distribution flow with `RewardDistributed(to, token, amount)` event.
-- Withdraw flow with `Withdraw(token, amount, to)` event.
+- Withdraw flow with `Withdraw(caller, token, amount, to)` event.
 
 ### Important behavior notes
 
@@ -27,6 +27,7 @@ Current implementation:
 - Direct native sends are rejected by `receive()` so deposits are always event-tracked.
 - ERC20 transfers sent directly to the contract (without calling `deposit`) cannot be prevented; funds are still usable, but no `Deposit` event is emitted.
 - OFT handling does not require LayerZero imports for this contract because local token handling is ERC20-compatible.
+- `withdraw` intentionally bypasses pause checks so owner/admin can recover funds during incident response.
 
 ## Network Configuration (Glue)
 
