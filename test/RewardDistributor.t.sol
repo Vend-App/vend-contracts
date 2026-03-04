@@ -80,12 +80,49 @@ contract RewardDistributorTest is Test {
         assertEq(address(distributor).balance, NATIVE_REWARD_AMOUNT);
     }
 
+    function testFuzz_DepositNative(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        vm.deal(user, amount);
+
+        vm.expectEmit(true, true, false, true);
+        emit Deposit(user, address(0), amount);
+
+        vm.prank(user);
+        distributor.deposit{value: amount}(address(0), amount);
+
+        assertEq(address(distributor).balance, amount);
+    }
+
+    function testFuzz_DepositErc20(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 1_000_000e18);
+        token.mint(user, amount);
+
+        vm.startPrank(user);
+        token.approve(address(distributor), amount);
+
+        vm.expectEmit(true, true, false, true);
+        emit Deposit(user, address(token), amount);
+        distributor.deposit(address(token), amount);
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(address(distributor)), amount);
+    }
+
     function testDepositNativeRevertsOnWrongValue() external {
         vm.deal(user, NATIVE_REWARD_AMOUNT);
 
         vm.expectRevert(abi.encodeWithSelector(RewardDistributor.InvalidNativeDeposit.selector));
         vm.prank(user);
         distributor.deposit{value: NATIVE_REWARD_AMOUNT - 1}(address(0), NATIVE_REWARD_AMOUNT);
+    }
+
+    function testFuzz_DepositNativeRevertsOnWrongValue(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        vm.deal(user, amount);
+
+        vm.expectRevert(abi.encodeWithSelector(RewardDistributor.InvalidNativeDeposit.selector));
+        vm.prank(user);
+        distributor.deposit{value: amount - 1}(address(0), amount);
     }
 
     function testDepositErc20RevertsIfMsgValueProvided() external {
@@ -127,12 +164,37 @@ contract RewardDistributorTest is Test {
         assertEq(recipient.balance, startBalance + NATIVE_REWARD_AMOUNT);
     }
 
+    function testFuzz_AdminCanDistributeNative(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        _setAdmin();
+        _depositNative(owner, amount);
+
+        uint256 startBalance = recipient.balance;
+        vm.expectEmit(true, true, false, true);
+        emit RewardDistributed(recipient, address(0), amount);
+
+        vm.prank(admin);
+        distributor.distributeReward(recipient, address(0), amount);
+
+        assertEq(recipient.balance, startBalance + amount);
+    }
+
     function testDistributeNativeRevertsOnInsufficientBalance() external {
         _setAdmin();
 
         vm.expectRevert(abi.encodeWithSelector(RewardDistributor.InsufficientBalance.selector));
         vm.prank(admin);
         distributor.distributeReward(recipient, address(0), NATIVE_REWARD_AMOUNT);
+    }
+
+    function testFuzz_DistributeNativeRevertsOnInsufficientBalance(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        _setAdmin();
+        _depositNative(owner, amount);
+
+        vm.expectRevert(abi.encodeWithSelector(RewardDistributor.InsufficientBalance.selector));
+        vm.prank(admin);
+        distributor.distributeReward(recipient, address(0), amount + 1);
     }
 
     function testNonAdminCannotDistributeOrWithdraw() external {
@@ -156,6 +218,31 @@ contract RewardDistributorTest is Test {
         distributor.withdraw(address(token), TOKEN_REWARD_AMOUNT, address(0));
 
         assertEq(token.balanceOf(admin), TOKEN_REWARD_AMOUNT);
+    }
+
+    function testFuzz_WithdrawNative(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        _setAdmin();
+        _depositNative(owner, amount);
+
+        uint256 startBalance = admin.balance;
+        vm.expectEmit(true, true, true, true);
+        emit Withdraw(admin, address(0), amount, admin);
+
+        vm.prank(admin);
+        distributor.withdraw(address(0), amount, address(0));
+
+        assertEq(admin.balance, startBalance + amount);
+    }
+
+    function testFuzz_WithdrawNativeRevertsOnInsufficientBalance(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        _setAdmin();
+        _depositNative(owner, amount);
+
+        vm.expectRevert(abi.encodeWithSelector(RewardDistributor.InsufficientBalance.selector));
+        vm.prank(admin);
+        distributor.withdraw(address(0), amount + 1, recipient);
     }
 
     function testPauseBlocksDepositAndDistribute() external {

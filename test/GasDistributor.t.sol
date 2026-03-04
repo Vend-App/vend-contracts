@@ -74,6 +74,53 @@ contract GasDistributorTest is Test {
         assertEq(recipient.balance, startBalance + GAS_AMOUNT);
     }
 
+    function testFuzz_Deposit(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        vm.deal(user, amount);
+
+        vm.expectEmit(true, false, false, true);
+        emit Deposit(user, amount);
+
+        vm.prank(user);
+        distributor.deposit{value: amount}();
+
+        assertEq(address(distributor).balance, amount);
+    }
+
+    function testFuzz_DepositRevertsOnZeroValue(uint256 amount) external {
+        vm.assume(amount == 0);
+
+        vm.expectRevert(abi.encodeWithSelector(GasDistributor.ZeroAmount.selector));
+        vm.prank(user);
+        distributor.deposit{value: amount}();
+    }
+
+    function testFuzz_AdminCanDistributeGas(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        _setAdmin();
+        _depositNative(owner, amount);
+
+        uint256 startBalance = recipient.balance;
+        vm.expectEmit(true, false, false, true);
+        emit GasDistributed(recipient, amount);
+
+        vm.prank(admin);
+        distributor.distributeGas(recipient, amount);
+
+        assertEq(recipient.balance, startBalance + amount);
+    }
+
+    function testFuzz_DistributeGasRevertsOnInsufficientBalance(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        _setAdmin();
+        _depositNative(owner, amount);
+        uint256 tooMuch = amount + 1;
+
+        vm.expectRevert(abi.encodeWithSelector(GasDistributor.InsufficientBalance.selector));
+        vm.prank(admin);
+        distributor.distributeGas(recipient, tooMuch);
+    }
+
     function testNonAdminCannotDistributeOrWithdraw() external {
         vm.expectRevert(abi.encodeWithSelector(GasDistributor.Unauthorized.selector));
         vm.prank(user);
@@ -96,6 +143,32 @@ contract GasDistributorTest is Test {
         distributor.withdraw(GAS_AMOUNT, address(0));
 
         assertEq(admin.balance, startBalance + GAS_AMOUNT);
+    }
+
+    function testFuzz_Withdraw(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        _setAdmin();
+        _depositNative(owner, amount);
+
+        uint256 startBalance = admin.balance;
+        vm.expectEmit(true, false, true, true);
+        emit Withdraw(admin, amount, admin);
+
+        vm.prank(admin);
+        distributor.withdraw(amount, address(0));
+
+        assertEq(admin.balance, startBalance + amount);
+    }
+
+    function testFuzz_WithdrawRevertsOnInsufficientBalance(uint256 amount) external {
+        vm.assume(amount > 0 && amount <= 100 ether);
+        _setAdmin();
+        _depositNative(owner, amount);
+        uint256 tooMuch = amount + 1;
+
+        vm.expectRevert(abi.encodeWithSelector(GasDistributor.InsufficientBalance.selector));
+        vm.prank(admin);
+        distributor.withdraw(tooMuch, recipient);
     }
 
     function testPauseBlocksDepositAndDistribute() external {
