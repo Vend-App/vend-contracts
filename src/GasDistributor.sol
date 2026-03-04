@@ -9,8 +9,8 @@ contract GasDistributor is Ownable, Pausable, ReentrancyGuard {
     error Unauthorized();
     error ZeroAmount();
     error ZeroAddress();
-    error InvalidNativeDeposit();
     error NativeTransferFailed();
+    error InsufficientBalance();
     error DirectNativeDepositDisabled();
 
     event AdminUpdated(address indexed admin, bool enabled);
@@ -46,11 +46,9 @@ contract GasDistributor is Ownable, Pausable, ReentrancyGuard {
         _unpause();
     }
 
-    function deposit(uint256 amount) external payable whenNotPaused nonReentrant {
-        if (amount == 0) revert ZeroAmount();
-        if (msg.value != amount) revert InvalidNativeDeposit();
-
-        emit Deposit(msg.sender, amount);
+    function deposit() external payable whenNotPaused nonReentrant {
+        if (msg.value == 0) revert ZeroAmount();
+        emit Deposit(msg.sender, msg.value);
     }
 
     function distributeGas(address to, uint256 amount) external onlyOwnerOrAdmin whenNotPaused nonReentrant {
@@ -75,6 +73,7 @@ contract GasDistributor is Ownable, Pausable, ReentrancyGuard {
     }
 
     function _transferNative(address to, uint256 amount) internal {
+        if (address(this).balance < amount) revert InsufficientBalance();
         (bool success,) = payable(to).call{value: amount}("");
         if (!success) revert NativeTransferFailed();
     }

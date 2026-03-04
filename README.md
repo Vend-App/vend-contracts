@@ -47,7 +47,7 @@ Current implementation:
 ### Important behavior notes
 
 - Distributions are intended to be initiated by the Vend app's backend server wallet as admin.
-- Native deposits must use `deposit(amount)` with matching `msg.value`.
+- Native deposits must use `deposit()` with `msg.value > 0`.
 - Direct native sends are rejected by `receive()` so deposits are always event-tracked.
 - `withdraw` intentionally bypasses pause checks so owner/admin can recover funds during incident response.
 
