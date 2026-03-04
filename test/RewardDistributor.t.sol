@@ -127,6 +127,14 @@ contract RewardDistributorTest is Test {
         assertEq(recipient.balance, startBalance + NATIVE_REWARD_AMOUNT);
     }
 
+    function testDistributeNativeRevertsOnInsufficientBalance() external {
+        _setAdmin();
+
+        vm.expectRevert(abi.encodeWithSelector(RewardDistributor.InsufficientBalance.selector));
+        vm.prank(admin);
+        distributor.distributeReward(recipient, address(0), NATIVE_REWARD_AMOUNT);
+    }
+
     function testNonAdminCannotDistributeOrWithdraw() external {
         vm.expectRevert(abi.encodeWithSelector(RewardDistributor.Unauthorized.selector));
         vm.prank(user);
