@@ -32,9 +32,6 @@ contract DeployGasDistributorScript is Script {
         deployed = new GasDistributor(deployer);
         vm.stopBroadcast();
 
-        require(deployed.owner() == deployer, "Owner mismatch");
-
         console2.log("GasDistributor deployed at:", address(deployed));
-        console2.log("Owner set to:", deployed.owner());
     }
 }

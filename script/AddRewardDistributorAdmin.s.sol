@@ -37,8 +37,5 @@ contract AddRewardDistributorAdminScript is Script {
         vm.startBroadcast(signerPrivateKey);
         IRewardDistributorAdmin(rewardDistributor).setAdmin(adminToAdd, true);
         vm.stopBroadcast();
-
-        bool enabled = IRewardDistributorAdmin(rewardDistributor).isAdmin(adminToAdd);
-        console2.log("Admin enabled:", enabled);
     }
 }

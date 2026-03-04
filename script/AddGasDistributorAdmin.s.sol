@@ -37,8 +37,5 @@ contract AddGasDistributorAdminScript is Script {
         vm.startBroadcast(signerPrivateKey);
         IGasDistributorAdmin(gasDistributor).setAdmin(adminToAdd, true);
         vm.stopBroadcast();
-
-        bool enabled = IGasDistributorAdmin(gasDistributor).isAdmin(adminToAdd);
-        console2.log("Admin enabled:", enabled);
     }
 }
