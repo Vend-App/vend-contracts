@@ -18,9 +18,9 @@ contract MockERC20 is ERC20 {
 
 contract RewardDistributorTest is Test {
     event AdminUpdated(address indexed admin, bool enabled);
-    event Deposit(address indexed token, uint256 amount);
+    event Deposit(address indexed caller, address indexed token, uint256 amount);
     event RewardDistributed(address indexed to, address indexed token, uint256 amount);
-    event Withdraw(address indexed token, uint256 amount, address indexed to);
+    event Withdraw(address indexed caller, address indexed token, uint256 amount, address indexed to);
 
     RewardDistributor internal distributor;
     MockERC20 internal token;
@@ -60,8 +60,8 @@ contract RewardDistributorTest is Test {
         vm.startPrank(user);
         token.approve(address(distributor), TOKEN_REWARD_AMOUNT);
 
-        vm.expectEmit(true, false, false, true);
-        emit Deposit(address(token), TOKEN_REWARD_AMOUNT);
+        vm.expectEmit(true, true, false, true);
+        emit Deposit(user, address(token), TOKEN_REWARD_AMOUNT);
         distributor.deposit(address(token), TOKEN_REWARD_AMOUNT);
         vm.stopPrank();
 
@@ -71,8 +71,8 @@ contract RewardDistributorTest is Test {
     function testDepositNativeEmitsEvent() external {
         vm.deal(user, NATIVE_REWARD_AMOUNT);
 
-        vm.expectEmit(true, false, false, true);
-        emit Deposit(address(0), NATIVE_REWARD_AMOUNT);
+        vm.expectEmit(true, true, false, true);
+        emit Deposit(user, address(0), NATIVE_REWARD_AMOUNT);
 
         vm.prank(user);
         distributor.deposit{value: NATIVE_REWARD_AMOUNT}(address(0), NATIVE_REWARD_AMOUNT);
@@ -141,8 +141,8 @@ contract RewardDistributorTest is Test {
         _setAdmin();
         _depositErc20(owner, TOKEN_REWARD_AMOUNT);
 
-        vm.expectEmit(true, false, true, true);
-        emit Withdraw(address(token), TOKEN_REWARD_AMOUNT, admin);
+        vm.expectEmit(true, true, true, true);
+        emit Withdraw(admin, address(token), TOKEN_REWARD_AMOUNT, admin);
 
         vm.prank(admin);
         distributor.withdraw(address(token), TOKEN_REWARD_AMOUNT, address(0));
@@ -164,6 +164,22 @@ contract RewardDistributorTest is Test {
         vm.expectRevert(Pausable.EnforcedPause.selector);
         vm.prank(admin);
         distributor.distributeReward(recipient, address(0), 1);
+    }
+
+    function testWithdrawWorksWhilePaused() external {
+        _setAdmin();
+        _depositErc20(owner, TOKEN_REWARD_AMOUNT);
+
+        vm.prank(owner);
+        distributor.pause();
+
+        vm.expectEmit(true, true, true, true);
+        emit Withdraw(admin, address(token), TOKEN_REWARD_AMOUNT, admin);
+
+        vm.prank(admin);
+        distributor.withdraw(address(token), TOKEN_REWARD_AMOUNT, address(0));
+
+        assertEq(token.balanceOf(admin), TOKEN_REWARD_AMOUNT);
     }
 
     function testReceiveReverts() external {
