@@ -4,11 +4,11 @@ pragma solidity ^0.8.20;
 // Usage:
 // 1) Dry run (no broadcast):
 //    source .env
-//    forge script script/DeployRewardDistributor.s.sol:DeployRewardDistributorScript --rpc-url glue
+//    forge script script/DeployRewardDistributor.s.sol:DeployRewardDistributorScript --rpc-url glue -g 300
 //
 // 2) Broadcast + verify on Blockscout:
 //    source .env
-//    forge script script/DeployRewardDistributor.s.sol:DeployRewardDistributorScript --rpc-url glue --broadcast --verify --verifier blockscout --verifier-url https://explorer.glue.net/api
+//    forge script script/DeployRewardDistributor.s.sol:DeployRewardDistributorScript --rpc-url glue -g 300 --broadcast --verify --verifier blockscout --verifier-url https://explorer.glue.net/api
 //
 // Notes:
 // - PRIVATE_KEY must be set in the environment (read via vm.envUint("PRIVATE_KEY")).

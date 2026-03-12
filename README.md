@@ -6,6 +6,13 @@ Current implementation:
 - `src/RewardDistributor.sol`
 - `src/GasDistributor.sol`
 
+The contracts are currently deployed to Glue EVM (Chain: 1300) at the following addresses:
+
+```
+RewardDistributor: 0xF7C6B9678fE98f211236DAAF1C092f4255520d39
+GasDistributor: 0x1d0d54530C912f3C046D65182C0422Fe183fB270
+```
+
 ## RewardDistributor
 
 `RewardDistributor` is a simple vault-style contract for holding ERC20 tokens (including LayerZero OFTs) and native gas tokens. Reward-focused events are emitted for indexing.
