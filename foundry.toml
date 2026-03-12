@@ -1,6 +1,7 @@
 [profile.default]
 auto_detect_solc = false
 solc = "0.8.28"
+evm_version = "london"
 src = "src"
 out = "out"
 libs = ["lib"]
@@ -16,7 +17,7 @@ remappings = [
 ]
 
 [rpc_endpoints]
-glue = "https://rpc.vend.trade"
+glue = "https://rpc.glue.net"
 
 [etherscan]
 glue = { key = "no-key-required", url = "https://explorer.glue.net/api" }
